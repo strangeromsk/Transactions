@@ -6,7 +6,7 @@ public class Bank implements Runnable
 {
     private static Map<String, Account> accounts;
     private static final Random random = new Random();
-    private static final int clientsNumber = 100000;
+    private static final int clientsNumber = 100;
     private static final int processors = Runtime.getRuntime().availableProcessors();
 
     @Override
@@ -26,10 +26,13 @@ public class Bank implements Runnable
             new Thread(new Bank()).start();
         }
         System.out.println("Balance is " + getBalance(12));
+
         if(accounts.size() == clientsNumber){
-            transfer(1004,876, 50000);
-            System.out.println("First client balance " + getBalance(1004) + "Second client balance " + getBalance(876));
+            System.out.println("First client balance before " + getBalance(57) + "Second client balance before " + getBalance(87));
+            transfer(57,87, 5);
+            System.out.println("First client balance after " + getBalance(57) + "Second client balance after " + getBalance(87));
         }
+
     }
 
     private static synchronized void generator(){
