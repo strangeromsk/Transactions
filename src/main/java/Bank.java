@@ -1,6 +1,7 @@
 import com.github.javafaker.Faker;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Bank implements Runnable
 {
@@ -22,21 +23,15 @@ public class Bank implements Runnable
     }
 
     public static void main(String[] args) {
+        accounts = new HashMap<>();
         for(int i = 0; i < processors; i++){
             new Thread(new Bank()).start();
         }
-        System.out.println("Balance is " + getBalance(12));
-
-        if(accounts.size() == clientsNumber){
-            System.out.println("First client balance before " + getBalance(57) + "Second client balance before " + getBalance(87));
-            transfer(57,87, 5);
-            System.out.println("First client balance after " + getBalance(57) + "Second client balance after " + getBalance(87));
-        }
-
+        //System.out.println("Balance is " + getBalance(12));
     }
 
     private static synchronized void generator(){
-        accounts = new HashMap<>();
+
         int count1 = (int) (clientsNumber*0.95);
         for(int i = 0; i < count1; i++){
             Account accountPoor = new Account();
@@ -51,7 +46,12 @@ public class Bank implements Runnable
             accountRich.setMoney((long) (Math.random() * 10000000));
             accounts.put(randomIdentifier(), accountRich);
         }
-        System.out.println(accounts.size());
+        //System.out.println(accounts.size());
+        if(accounts.size() == clientsNumber){
+            System.out.println("First client balance before " + getBalance(77) + " Second client balance before " + getBalance(87));
+            transfer(77,87, 60000);
+            System.out.println("First client balance after " + getBalance(77) + " Second client balance after " + getBalance(87));
+        }
     }
     /**
      * TODO: реализовать метод. Метод переводит деньги между счетами.
@@ -62,37 +62,46 @@ public class Bank implements Runnable
      */
     private static synchronized void transfer(long fromAccountNum, long toAccountNum, long amount)
     {
-        accounts.values().stream().map(e->{
-            if(e.isFraudulent()){
+        AtomicBoolean localFraud = new AtomicBoolean(false);
+        accounts.values().forEach(e->{
+            if(e.getAccNumber()==fromAccountNum && e.isFraudulent()){
                 System.out.println("You cannot make money transfers.");
-            }else{
-                if(amount > 50000){
-                    try {
-                        if(!isFraud(fromAccountNum, toAccountNum,amount)){
-                            e.setAccNumber(fromAccountNum);
-                            e.setMoney(e.getMoney()-amount);
-                            e.setAccNumber(toAccountNum);
-                            e.setMoney(e.getMoney()+amount);
-                        }
-                        else{
-                            block(fromAccountNum, toAccountNum);
-                        }
-                    } catch (InterruptedException ex) {
-                        ex.printStackTrace();
-                    }
-                }
-                else{
-                    e.setAccNumber(fromAccountNum);
+            }
+            if (e.getAccNumber()==toAccountNum && e.isFraudulent()){
+                System.out.println("You cannot make money transfers.");
+            }
+            if(amount < 50000){
+                if (e.getAccNumber()==fromAccountNum){
                     e.setMoney(e.getMoney()-amount);
-                    e.setAccNumber(toAccountNum);
+                }
+                if (e.getAccNumber()==toAccountNum){
                     e.setMoney(e.getMoney()+amount);
                 }
             }
-            return -1;
+            if(amount >= 50000 && e.getAccNumber()==fromAccountNum) {
+                try {
+                    if(!isFraud(fromAccountNum, toAccountNum, amount)){
+                        e.setMoney(e.getMoney()-amount);
+                    }
+                    else {
+                        block(fromAccountNum);
+                        localFraud.set(true);
+                    }
+
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            if(amount >= 50000 && e.getAccNumber()==toAccountNum){
+                if(!localFraud.get()){
+                    e.setMoney(e.getMoney()+amount);
+                }
+                else {
+                    block(toAccountNum);
+                }
+            }
         });
-
     }
-
     /**
      * TODO: реализовать метод. Возвращает остаток на счёте.
      * @return
@@ -103,12 +112,12 @@ public class Bank implements Runnable
         return tr;
     }
 
-    private synchronized static void block(long fromAccountNum, long toAccountNum){
-        accounts.values().stream().forEachOrdered(e->{
-            e.setAccNumber(fromAccountNum);
-            e.setFraudulent(true);
-            e.setAccNumber(toAccountNum);
-            e.setFraudulent(true);
+    private synchronized static void block(long accountNum){
+        System.out.println("You cannot make money transfers right now.");
+        accounts.values().forEach(e->{
+            if(e.getAccNumber()==accountNum){
+                e.setFraudulent(true);
+            }
         });
     }
 

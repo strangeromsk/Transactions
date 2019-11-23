@@ -2,7 +2,6 @@ public class Account
 {
     private long money;
     private long accNumber;
-
     private boolean fraudulent;
 
     public long getMoney() {
@@ -28,6 +27,4 @@ public class Account
     public void setFraudulent(boolean fraudulent) {
         this.fraudulent = fraudulent;
     }
-
-
 }
