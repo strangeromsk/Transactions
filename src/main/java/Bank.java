@@ -31,7 +31,6 @@ public class Bank implements Runnable
     }
 
     private static synchronized void generator(){
-
         int count1 = (int) (clientsNumber*0.95);
         for(int i = 0; i < count1; i++){
             Account accountPoor = new Account();
@@ -46,11 +45,17 @@ public class Bank implements Runnable
             accountRich.setMoney((long) (Math.random() * 10000000));
             accounts.put(randomIdentifier(), accountRich);
         }
-        //System.out.println(accounts.size());
+        for(int i = 0; i < accounts.size()/3; i++){
+            long localAmount = (long) (Math.random()*70000);
+            checkAccount(i, i+2, localAmount);
+        }
+    }
+    private static synchronized void checkAccount(long fromAccNum, long toAccNum, long amount){
         if(accounts.size() == clientsNumber){
-            System.out.println("First client balance before " + getBalance(77) + " Second client balance before " + getBalance(87));
-            transfer(77,87, 60000);
-            System.out.println("First client balance after " + getBalance(77) + " Second client balance after " + getBalance(87));
+            System.out.println("HashMap size : " + accounts.size() + "\t" + "------------------------------------------------------------");
+            System.out.println("First client № " + fromAccNum +  " balance before " + getBalance(fromAccNum) + " Second client № " + toAccNum + " balance before " + getBalance(toAccNum) + " Amount is: "+ amount);
+            transfer(fromAccNum,toAccNum, amount);
+            System.out.println("First client № " + fromAccNum +  " balance after " + getBalance(fromAccNum) + " Second client № " + toAccNum + " balance after " + getBalance(toAccNum) + " Amount is: "+ amount);
         }
     }
     /**
@@ -64,42 +69,42 @@ public class Bank implements Runnable
     {
         AtomicBoolean localFraud = new AtomicBoolean(false);
         accounts.values().forEach(e->{
-            if(e.getAccNumber()==fromAccountNum && e.isFraudulent()){
+            if ((e.getAccNumber()==fromAccountNum && e.isFraudulent()) || (e.getAccNumber()==toAccountNum && e.isFraudulent())){
                 System.out.println("You cannot make money transfers.");
             }
-            if (e.getAccNumber()==toAccountNum && e.isFraudulent()){
-                System.out.println("You cannot make money transfers.");
-            }
-            if(amount < 50000){
-                if (e.getAccNumber()==fromAccountNum){
-                    e.setMoney(e.getMoney()-amount);
-                }
-                if (e.getAccNumber()==toAccountNum){
-                    e.setMoney(e.getMoney()+amount);
-                }
-            }
-            if(amount >= 50000 && e.getAccNumber()==fromAccountNum) {
-                try {
-                    if(!isFraud(fromAccountNum, toAccountNum, amount)){
+            else{
+                if(amount < 50000){
+                    if (e.getAccNumber()==fromAccountNum){
                         e.setMoney(e.getMoney()-amount);
                     }
-                    else {
-                        block(fromAccountNum);
-                        localFraud.set(true);
+                    if (e.getAccNumber()==toAccountNum){
+                        e.setMoney(e.getMoney()+amount);
                     }
+                }
+                if(amount >= 50000 && e.getAccNumber()==fromAccountNum) {
+                    try {
+                        if(!isFraud(fromAccountNum, toAccountNum, amount)){
+                            e.setMoney(e.getMoney()-amount);
+                        }
+                        else {
+                            block(fromAccountNum);
+                            localFraud.set(true);
+                        }
 
-                } catch (InterruptedException ex) {
-                    ex.printStackTrace();
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                if(amount >= 50000 && e.getAccNumber()==toAccountNum){
+                    if(!localFraud.get()){
+                        e.setMoney(e.getMoney()+amount);
+                    }
+                    else {
+                        block(toAccountNum);
+                    }
                 }
             }
-            if(amount >= 50000 && e.getAccNumber()==toAccountNum){
-                if(!localFraud.get()){
-                    e.setMoney(e.getMoney()+amount);
-                }
-                else {
-                    block(toAccountNum);
-                }
-            }
+
         });
     }
     /**
