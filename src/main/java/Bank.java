@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Bank implements Runnable {
     private static Map<String, Account> accounts;
     private static final Random random = new Random();
-    private static final int clientsNumber = 100;
+    private static final int clientsNumber = 1000;
     private static final int processors = Runtime.getRuntime().availableProcessors();
 
     private static boolean isFraud(long fromAccountNum, long toAccountNum, long amount)
@@ -20,31 +20,27 @@ public class Bank implements Runnable {
 
     public static void main(String[] args) {
         accounts = new ConcurrentHashMap<>();
-//        for (int i = 0; i < processors; i++) {
-//            new Thread(new Bank()).start();
-//        }
-        ExecutorService executorService =
-                Executors.newFixedThreadPool(processors);
-        executorService.execute(() -> {
-            for (int i = 0; i < processors; i++) {
-                new Thread(new Bank()).start();
-            }
-        });
-        //System.out.println("Balance is " + getBalance(12));
-    }
-
-    @Override
-    public void run() {
-        generator();
-    }
-
-    private static void generator() {
         for (int i = 0; i < clientsNumber; i++) {
             Account account = new Account();
             account.setAccNumber(i);
             account.setMoney((long) (Math.random() * 10000));
             accounts.put(randomIdentifier(), account);
         }
+        for (int i = 0; i < processors; i++) {
+            new Thread(new Bank()).start();
+        }
+//        ExecutorService executorService =
+//                Executors.newFixedThreadPool(processors);
+//        executorService.execute(() -> {
+//            for (int i = 0; i < processors; i++) {
+//                new Thread(new Bank()).start();
+//            }
+//        });
+        //System.out.println("Balance is " + getBalance(12));
+    }
+
+    @Override
+    public void run() {
         for (int i = 0; i < accounts.size() / 3; i++) {
             long localAmount = (long) (Math.random() * 70000);
             checkAccount(i, i + 2, localAmount);
