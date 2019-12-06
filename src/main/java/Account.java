@@ -3,7 +3,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class Account
 {
-
     private volatile long money;
     private volatile long accNumber;
     private volatile boolean fraudulent;
