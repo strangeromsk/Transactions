@@ -8,7 +8,7 @@ public class Main {
     public static void main(String[] args) {
         Map<String, Account> accounts = new Bank().getAccounts();
 
-        for (int i = 0; i < Threads.clientsNumber; i++) {
+        for (int i = 0; i < Bank.clientsNumber; i++) {
             Account account = new Account();
             account.setAccNumber(i);
             account.setMoney((long) (Math.random() * 10000));

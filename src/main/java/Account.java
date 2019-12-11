@@ -1,6 +1,3 @@
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-
 public class Account
 {
     private volatile long money;
