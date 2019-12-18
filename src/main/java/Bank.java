@@ -5,15 +5,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Bank{
 
     private static Map<String, Account> accounts = new ConcurrentHashMap<>();
-    public static final int clientsNumber = 1000;
+    public static final int clientsNumber = 100;
     private static final Random random = new Random();
 
     public Map<String, Account> getAccounts() {
         return accounts;
     }
 
-    static void checkAccount(long fromAccNum, long toAccNum, long amount) {
-        if (accounts.size() >= clientsNumber) {
+    public static void checkAccount(long fromAccNum, long toAccNum, long amount) {
+        if (accounts.size() == clientsNumber) {
             System.out.println("HashMap size : " + accounts.size() + "\t" + "------------------------------------------------------------");
             System.out.println("First client № " + fromAccNum + " balance before " + getBalance(fromAccNum) + " Second client № " + toAccNum + " balance before " + getBalance(toAccNum) + " Amount is: " + amount);
             transfer(fromAccNum, toAccNum, amount);
